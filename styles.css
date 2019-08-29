@@ -1,0 +1,123 @@
+.slider1 {
+  width:720px;
+  margin:auto;
+}
+.slider2 {
+  width:1530px;
+  margin:auto;
+}
+.carouseljs-wrapper {
+  position: relative;
+}
+.carouseljs-container {
+  overflow: hidden;
+}
+.carouseljs-container {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+.carouseljs-container > ul { 
+  display: flex; 
+  margin: 0; 
+  padding: 0;
+}
+.carouseljs-container > ul { 
+  background-color: #fbfbfb;
+  white-space: nowrap;
+}
+.carouseljs-container > ul > li { 
+  display: inline-block;
+  background-color: #b9b9b9;
+  overflow: hidden;
+}
+.carouseljs-container > ul > li * {
+  max-width: 100%;
+}
+
+
+.button {
+  border:1px solid red;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  transform: translate3d(0, 0, 0);
+  position: absolute;
+  -webkit-filter: drop-shadow(0 2px 0px rgba(0, 0, 0, 0.2));
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+.button i {
+  position: absolute;
+  width: 40px;
+  height: 3px;
+  border-radius: 2.5px;
+  background: red;
+  transition: all 0.15s ease;
+  top:50%;
+}
+.button.prev {
+  left: 0;
+}
+.button.next {
+  right: 0;
+}
+.button.prev i {
+  transform-origin: 0% 50%;
+}
+.button.next i {
+  transform-origin: 100% 50%;
+}
+.button.prev .top-line {
+  transform: translate(0, -1px) rotate(40deg);
+}
+.button.prev .bottom-line {
+  transform: translate(0, 1px) rotate(-40deg);
+}
+.button.prev:hover .top-line {
+  transform: translate(0, -1px) rotate(30deg);
+}
+.button.prev:hover .bottom-line {
+  transform: translate(0, 1px) rotate(-30deg);
+}
+.button.prev:active .top-line {
+  transform: translate(1px, -1px) rotate(25deg);
+}
+.button.prev:active .bottom-line {
+  transform: translate(1px, 1px) rotate(-25deg);
+}
+.button.prev[data-state=disabled] .top-line,
+.button.prev[data-state=disabled] .bottom-line {
+  transform: translate(-5px, 0) rotate(0deg);
+}
+.button.next .top-line {
+  transform: translate(0, 1px) rotate(40deg);
+}
+.button.next .bottom-line {
+  transform: translate(0, -1px) rotate(-40deg);
+}
+.button.next:hover .top-line {
+  transform: translate(0, 1px) rotate(30deg);
+}
+.button.next:hover .bottom-line {
+  transform: translate(0, -1px) rotate(-30deg);
+}
+.button.next:active .top-line {
+  transform: translate(1px, 1px) rotate(25deg);
+}
+.button.next:active .bottom-line {
+  transform: translate(1px, -1px) rotate(-25deg);
+}
+.button.next[data-state=disabled] .top-line,
+.button.next[data-state=disabled] .bottom-line {
+  transform: translate(5px, 0) rotate(0deg);
+}
+.button[data-state=disabled] {
+  opacity: 0.3;
+  cursor: default;
+}
+
+
