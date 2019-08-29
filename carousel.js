@@ -15,30 +15,31 @@ var CarouselJS = {
         layout: 'grid',                 // Choose what layout to use
                                         // `grid` : use flex grid, allowing you to only display a specific amount of items per slide 
                                         // `auto` : puts each item simply behind eachother, not caring about how many are visible
-        columns: 4,                     // The items per slide (only works when `grid` layout is enabled)
+        columns: 2,                     // The items per slide (only works when `grid` layout is enabled)
                                         // This will basically create slides of X items each
                                         // Each item will get a width based on the carousel container width
                                         // For instance: if the carousel is 900px in width, each element would be 300px in width when
                                         // this option is set to `columns: 3`
+        
+        // Navigation
+        navigation: true,               // Display Prev/Next buttons (true|false)
+        buttons: {
+            enabled: true,  // Display Prev/Next buttons (true|false)
+            previous: {
+                html: ''    // HTML for inside the "prev/backward" button (leave blank for default buttons)
+            },
+            next: {
+                html: ''    // HTML for inside the "next/forward" button (leave blank for default buttons)
+            }
+        },
+        
         // Items
         items: {
             margin: '10px 10px 10px 10px',  // Define margin for each item
             padding: '10px 10px 10px 10px'  // Define padding for each item
         },
-        animationSpeed: 0.3,                // The scroll animation speed in seconds
+        animationSpeed: 0.3                 // The scroll animation speed in seconds
         
-        // Navigation
-        navigation: {
-            buttons: {
-                enabled: true,  // Display Prev/Next buttons (true|false)
-                previous: {
-                    html: ''    // HTML for inside the "prev/backward" button (leave blank for default buttons)
-                },
-                next: {
-                    html: ''    // HTML for inside the "next/forward" button (leave blank for default buttons)
-                }
-            }
-        }
     },
 
     // "action" holds the type of action to trigger the slide e.g `next` `prev`
@@ -193,13 +194,24 @@ var CarouselJS = {
             next.classList.add('current');
         }
     },
-    slideCarousel: function(amount) {
-        if(this._action=='next'){
-            amount = this._totalScrolled - amount; // If sliding forward (next)
+    slideCarousel: function(amount, carousel=null) {
+        if(!carousel){
+            if(this._action=='next'){
+                amount = this._totalScrolled - amount; // If sliding forward (next)
+            }else{
+                amount = this._totalScrolled + amount; // If sliding backward (previous)
+            }
+            // Amount to slide can not be above 0, let's make sure of that
+            if(amount>0) amount = 0;
+            this._carouselTrack.style.marginLeft = amount + 'px';
         }else{
-            amount = this._totalScrolled + amount; // If sliding backward (previous)
+            // Aso reset current to the first item
+            // We could also adjust the marginLeft property upon resizing the window
+            // but this is just the easy way around, and it's not that important
+            carousel.querySelector('.current').classList.remove('current');
+            carousel.firstElementChild.classList.add('current');
+            carousel.style.marginLeft = amount + 'px'; 
         }
-        this._carouselTrack.style.marginLeft = amount + 'px';
     },
     overlapLeft: function() {
         return this._currentItemWidth - this.overlapRight();
@@ -222,12 +234,67 @@ var CarouselJS = {
         var style = window.getComputedStyle ? getComputedStyle(node, null) : node.currentStyle,
             marginLeft = parseFloat(style.marginLeft) || 0,
             marginRight = parseFloat(style.marginRight) || 0;
+        if(node.classList.contains('carouseljs-wrapper')){
+            var paddingLeft = parseFloat(style.paddingLeft) || 0,
+                paddingRight = parseFloat(style.paddingRight) || 0,
+                padding = paddingLeft+paddingRight;
+            return node.offsetWidth+(marginLeft+marginRight)-(paddingLeft+paddingRight);
+        } 
         return node.offsetWidth+(marginLeft+marginRight);
     },
     setMarginPadding: function(node){
         var _ = this.settings;
         if(_.items.margin!='') node.style.margin = _.items.margin;
         if(_.items.padding!='') node.style.padding = _.items.padding;
+    },
+
+    // Redraw (resize carousel). Will make sure the carousel is responsiveness based on it's parent width
+    // Will fire upon initializing, and upon window.resize event
+    redraw: function(fn, _, customSettings, carousel, container){
+        // Merge with core settings
+        _ = Object.assign(_, customSettings);
+        this.slideCarousel(0, carousel);
+        // Setup item width if `grid` layout is being used
+        if(_.layout=='grid'){
+            var itemWidth = parseFloat(container.clientWidth / _.columns).toFixed(2),
+                nodes = carousel.children,
+                len = nodes.length,
+                style = null,
+                i = 0,
+                marginLeft, marginRight, paddingLeft, paddingRight;
+
+            // @IMPORTANT:
+            // To speed up the loop, make sure we put the margins and paddings into our cache
+            // instead of calling `getComputedStyle` inside the loop on each item
+            
+            // First set the margin and paddings based on the settings for the first item
+            fn.setMarginPadding(nodes[i]);
+            // After we have set the item padding and margin, we can set it's width
+            // We must substract the items margin in order to get a correct width
+            style = window.getComputedStyle ? getComputedStyle(nodes[i], null) : nodes[i].currentStyle;
+            marginLeft = parseFloat(style.marginLeft) || 0;
+            marginRight = parseFloat(style.marginRight) || 0;
+            paddingLeft = parseFloat(style.paddingLeft) || 0;
+            paddingRight = parseFloat(style.paddingRight) || 0;
+            // Set correct width
+            nodes[i].style.width = itemWidth-(marginLeft+marginRight)-(paddingLeft+paddingRight)+'px';
+
+            // Now that we have our margin and padding loop over all other items
+            for (var i = 1; i < len; i++) {
+                // Set margin and paddings for the item
+                fn.setMarginPadding(nodes[i]);
+                // Set correct width
+                nodes[i].style.width = itemWidth-(marginLeft+marginRight)-(paddingLeft+paddingRight)+'px';
+            }
+        }
+        // var parent = carousel.parentNode;
+        // var style = window.getComputedStyle ? getComputedStyle(parent, null) : parent.currentStyle;
+        // var paddingLeft = parseFloat(style.paddingLeft) || 0;
+        // var paddingRight = parseFloat(style.paddingRight) || 0;
+        // var parentWidth = parent.clientWidth-(paddingLeft+paddingRight);
+        // // Get parent width (without padding, margin and border)
+        // console.log('parent width: ', parentWidth);
+        // console.log(this.settings);
     },
 
     // Initialize CarouselJS
@@ -240,6 +307,20 @@ var CarouselJS = {
             var obj = document.querySelectorAll(_.selector);
             Object.keys(obj).forEach(function(key) {
                 var carousel = obj[key];
+                var firstElement = carousel.firstElementChild;
+                // Before we do anything, check if we need to grab custom settings from the `<textarea>` element (if one exists)
+                if(firstElement.tagName=='TEXTAREA'){
+                    var customSettings = carousel.firstElementChild.value;
+                    try {
+                        customSettings = JSON.parse(customSettings);
+                    } catch(e) {
+                        alert(e);
+                    }
+                    // Merge with core settings
+                    _ = Object.assign(_, customSettings);
+                    // After successful merge, delete the element
+                    firstElement.remove();
+                }
                 carousel.classList.remove('carouseljs');
                 carousel.classList.add(_.customClass + '-track');
                 carousel.firstElementChild.classList.add('current');
@@ -255,16 +336,16 @@ var CarouselJS = {
                 container.classList.add('carouseljs-container');
                 container.classList.add(_.customClass + '-container');
                 // Add buttons if enabled
-                if (_.navigation.buttons.enabled === true) {
+                if (_.navigation === true) {
                     // Add "Previous" button
                     var prevButton = document.createElement('div');
-                    prevButton.innerHTML = _.navigation.buttons.previous.html ? _.navigation.buttons.previous.html : '<i class="top-line"></i><i class="bottom-line"></i>';
+                    prevButton.innerHTML = _.buttons.previous.html ? _.buttons.previous.html : '<i class="top-line"></i><i class="bottom-line"></i>';
                     prevButton.setAttribute("onclick", "CarouselJS.trigger(this, 'prev')");
                     prevButton.className = 'button prev';
                     wrapper.appendChild(prevButton);
                     // Add "Next" button
                     var nextButton = document.createElement('div');
-                    nextButton.innerHTML = _.navigation.buttons.next.html ? _.navigation.buttons.next.html : '<i class="top-line"></i><i class="bottom-line"></i>';
+                    nextButton.innerHTML = _.buttons.next.html ? _.buttons.next.html : '<i class="top-line"></i><i class="bottom-line"></i>';
                     nextButton.setAttribute("onclick", "CarouselJS.trigger(this, 'next')");
                     nextButton.className = 'button next';
                     wrapper.appendChild(nextButton);
@@ -275,40 +356,12 @@ var CarouselJS = {
                 container.appendChild(carousel);
                 // Move container into wrapper
                 wrapper.appendChild(container);
-                // Setup item width if `grid` layout is being used
-                if(_.layout=='grid'){
-                    console.log('Grid layout is used, set correct item width based on carousel container');
-                    var itemWidth = parseFloat(container.clientWidth / _.columns).toFixed(2),
-                        nodes = carousel.children,
-                        len = nodes.length,
-                        style = null,
-                        i = 0,
-                        marginLeft, marginRight, paddingLeft, paddingRight;
- 
-                    // @IMPORTANT:
-                    // To speed up the loop, make sure we put the margins and paddings into our cache
-                    // instead of calling `getComputedStyle` inside the loop on each item
-                    
-                    // First set the margin and paddings based on the settings for the first item
-                    fn.setMarginPadding(nodes[i]);
-                    // After we have set the item padding and margin, we can set it's width
-                    // We must substract the items margin in order to get a correct width
-                    style = window.getComputedStyle ? getComputedStyle(nodes[i], null) : nodes[i].currentStyle;
-                    marginLeft = parseFloat(style.marginLeft) || 0;
-                    marginRight = parseFloat(style.marginRight) || 0;
-                    paddingLeft = parseFloat(style.paddingLeft) || 0;
-                    paddingRight = parseFloat(style.paddingRight) || 0;
-                    // Set correct width
-                    nodes[i].style.width = itemWidth-(marginLeft+marginRight)-(paddingLeft+paddingRight)+'px';
-
-                    // Now that we have our margin and padding loop over all other items
-                    for (var i = 1; i < len; i++) {
-                        // Set margin and paddings for the item
-                        fn.setMarginPadding(nodes[i]);
-                        // Set correct width
-                        nodes[i].style.width = itemWidth-(marginLeft+marginRight)-(paddingLeft+paddingRight)+'px';
-                    }
-                }
+                // Resize items properly on intialization
+                fn.redraw(fn, _, customSettings, carousel, container);
+                // Also redraw upon resizing window
+                window.addEventListener("resize", function(){
+                    fn.redraw(fn, _, customSettings, carousel, container);
+                });
             });
         } else {
             // Display error to the user about a missing option/setting
