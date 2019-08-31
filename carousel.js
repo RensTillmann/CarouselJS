@@ -20,11 +20,33 @@ var CarouselJS = {
                                         // Each item will get a width based on the carousel container width
                                         // For instance: if the carousel is 900px in width, each element would be 300px in width when
                                         // this option is set to `columns: 3`
+        minwidth: 300,                  // Define the minimum width an item must have before applying responsive settings.
+                                        // For instance let's say the screen size of the device is 768 (iPad).
+                                        // And let's assume that our carousel is inside a 100% width element meaning our carousel wrapper is 768 in width.
+                                        // And let's assume we have defined `columns: 5` (5 items per slide).
+                                        // 5x200=1000 (exceeds the width of the carousel wrapper which is 768).
+                                        // This means that there is not enough space to create items with a width of 200.
+                                        // In that case the script will determine a new width based on the 768 wrapper width.
+                                        // It always first checks if 1000 is below the wrapper width, if it is below this, it will decrease the `columns: 5`.
+                                        // It then checks if the new width of 800 is below the wrapper width, if not, it repeats the above.
+                                        // The next check would be done with `columns: 3` resulting in a 600 width total against 768.
+                                        // Of course this means that there is still some space left unused.
+                                        // To solve this we would simply devide 768 by 3 to get the width for each item
+                                        // In case there is only room for 1 item, it will apply 100% width on the item
         
         // Navigation
-        navigation: true,               // Display Prev/Next buttons (true|false)
+        navigation: true,                       // Display Prev/Next buttons (true|false)
+        dots: true,                             // Display "Dots" naviagtion below the slider
+
+        // Items
+        itemsMargin: '10px 10px 10px 10px',     // Define margin for each item
+        itemsPadding: '10px 10px 10px 10px',    // Define padding for each item
+
+        // Animation
+        animationSpeed: 0.3,                    // The scroll animation speed in seconds
+        
+        // Custom buttons HTML
         buttons: {
-            enabled: true,  // Display Prev/Next buttons (true|false)
             previous: {
                 html: ''    // HTML for inside the "prev/backward" button (leave blank for default buttons)
             },
@@ -32,13 +54,6 @@ var CarouselJS = {
                 html: ''    // HTML for inside the "next/forward" button (leave blank for default buttons)
             }
         },
-        
-        // Items
-        items: {
-            margin: '10px 10px 10px 10px',  // Define margin for each item
-            padding: '10px 10px 10px 10px'  // Define padding for each item
-        },
-        animationSpeed: 0.3                 // The scroll animation speed in seconds
         
     },
 
@@ -244,20 +259,23 @@ var CarouselJS = {
     },
     setMarginPadding: function(node){
         var _ = this.settings;
-        if(_.items.margin!='') node.style.margin = _.items.margin;
-        if(_.items.padding!='') node.style.padding = _.items.padding;
+        if(_.itemsMargin!='') node.style.margin = _.itemsMargin;
+        if(_.itemsPadding!='') node.style.padding = _.itemsPadding;
+    },
+    setItemWidth: function(item, columns, minwidth, wrapperWidth, newItemWidth){
+        item.style.width = newItemWidth+'px';
     },
 
     // Redraw (resize carousel). Will make sure the carousel is responsiveness based on it's parent width
     // Will fire upon initializing, and upon window.resize event
-    redraw: function(fn, _, customSettings, carousel, container){
+    redraw: function(fn, _, node){
         // Merge with core settings
-        _ = Object.assign(_, customSettings);
-        this.slideCarousel(0, carousel);
+        _ = Object.assign(_, node.settings);
+        this.slideCarousel(0, node.carousel);
         // Setup item width if `grid` layout is being used
         if(_.layout=='grid'){
-            var itemWidth = parseFloat(container.clientWidth / _.columns).toFixed(2),
-                nodes = carousel.children,
+            var itemWidth = parseFloat(node.container.clientWidth / _.columns).toFixed(2),
+                nodes = node.carousel.children,
                 len = nodes.length,
                 style = null,
                 i = 0,
@@ -277,24 +295,23 @@ var CarouselJS = {
             paddingLeft = parseFloat(style.paddingLeft) || 0;
             paddingRight = parseFloat(style.paddingRight) || 0;
             // Set correct width
-            nodes[i].style.width = itemWidth-(marginLeft+marginRight)-(paddingLeft+paddingRight)+'px';
-
+            var wrapperWidth = parseFloat(node.wrapper.clientWidth).toFixed(2);
+            var newItemWidth = parseFloat(itemWidth-(marginLeft+marginRight)-(paddingLeft+paddingRight)).toFixed(2);
+            // Check if item width is lower than `minwidth` setting
+            while (newItemWidth < _.minwidth){
+                _.columns--;
+                itemWidth = parseFloat(node.container.clientWidth / _.columns).toFixed(2),
+                newItemWidth = parseFloat(itemWidth-(marginLeft+marginRight)-(paddingLeft+paddingRight)).toFixed(2);
+            }
+            this.setItemWidth(nodes[i], _.columns, _.minwidth, wrapperWidth, newItemWidth);
             // Now that we have our margin and padding loop over all other items
             for (var i = 1; i < len; i++) {
                 // Set margin and paddings for the item
                 fn.setMarginPadding(nodes[i]);
                 // Set correct width
-                nodes[i].style.width = itemWidth-(marginLeft+marginRight)-(paddingLeft+paddingRight)+'px';
+                this.setItemWidth(nodes[i], _.columns, _.minwidth, wrapperWidth, newItemWidth);
             }
         }
-        // var parent = carousel.parentNode;
-        // var style = window.getComputedStyle ? getComputedStyle(parent, null) : parent.currentStyle;
-        // var paddingLeft = parseFloat(style.paddingLeft) || 0;
-        // var paddingRight = parseFloat(style.paddingRight) || 0;
-        // var parentWidth = parent.clientWidth-(paddingLeft+paddingRight);
-        // // Get parent width (without padding, margin and border)
-        // console.log('parent width: ', parentWidth);
-        // console.log(this.settings);
     },
 
     // Initialize CarouselJS
@@ -305,6 +322,7 @@ var CarouselJS = {
         if (typeof _.selector !== 'undefined' && _.selector !== '') {
             // Find and loop over all CarouselJS sliders
             var obj = document.querySelectorAll(_.selector);
+            var containers = [];
             Object.keys(obj).forEach(function(key) {
                 var carousel = obj[key];
                 var firstElement = carousel.firstElementChild;
@@ -335,7 +353,7 @@ var CarouselJS = {
                 var container = document.createElement('div');
                 container.classList.add('carouseljs-container');
                 container.classList.add(_.customClass + '-container');
-                // Add buttons if enabled
+                // Add buttons naviagtion if enabled
                 if (_.navigation === true) {
                     // Add "Previous" button
                     var prevButton = document.createElement('div');
@@ -350,19 +368,49 @@ var CarouselJS = {
                     nextButton.className = 'button next';
                     wrapper.appendChild(nextButton);
                 }
+                // Add dots navigation if enabled
+                if (_.dots === true) {
+                    // Determine how many dots we need to display
+                    var total = Math.ceil(carousel.children.length/_.columns, _.columns); 
+                    var html = '<span class="current"></span>'; // First slide is always the current one upon intialization
+                    var i=1;
+                    while(i < total){
+                        html += '<span></span>';
+                        i++;
+                        console.log(i);
+                    }
+                    // Now create the dots navigation and append it to the wrapper
+                    var dots= document.createElement('div');
+                    dots.classList.add('carouseljs-dots');
+                    dots.classList.add(_.customClass + '-dots');
+                    dots.innerHTML = html;
+                    wrapper.appendChild(dots); 
+
+                }
                 // Insert wrapper before carousel slider in the DOM tree
                 carousel.parentNode.insertBefore(wrapper, carousel);
                 // Move carousel slider into container
                 container.appendChild(carousel);
                 // Move container into wrapper
                 wrapper.appendChild(container);
-                // Resize items properly on intialization
-                fn.redraw(fn, _, customSettings, carousel, container);
-                // Also redraw upon resizing window
-                window.addEventListener("resize", function(){
-                    fn.redraw(fn, _, customSettings, carousel, container);
+                // Add container to object
+                containers.push({
+                    wrapper: wrapper,
+                    container: container,
+                    carousel: carousel,
+                    settings: customSettings
                 });
             });
+            
+            // Loop over all containers, and resize elements accordingly
+            Object.keys(containers).forEach(function(key) {
+                fn.redraw(fn, _, containers[key]);
+                // Also redraw upon resizing window
+                window.addEventListener("resize", function(){
+                    fn.redraw(fn, _, containers[key]);
+                });
+            });
+
         } else {
             // Display error to the user about a missing option/setting
             alert('You forgot to define a selector in the CarouselJS options section!');

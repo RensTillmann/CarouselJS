@@ -17,6 +17,7 @@ body {
   position: relative;
   padding-left: 60px;
   padding-right: 60px;
+  margin-bottom: 30px;
 }
 .carouseljs-container {
   overflow: hidden;
@@ -61,6 +62,7 @@ body {
   right: initial;
   left: 0px;
   transform: rotate(180deg);
+  margin-top: -22px;
 }
 .button i {
   position: absolute;
@@ -107,3 +109,48 @@ body {
 .button.next[data-state=disabled] .bottom-line {
   transform: translate(5px, 0) rotate(0deg);
 }
+
+/* Dots */
+.carouseljs-dots {
+  position:absolute;
+  left:0px;
+  bottom: -25px;
+  width:100%;
+  text-align:center;
+}
+.carouseljs-dots > span {
+  width: 30px;
+  height: 30px;
+  display:inline-block;
+  position:relative;
+  cursor: pointer;
+}
+.carouseljs-dots > span:before {
+  content:'';
+  position:absolute;
+  left: 5px;
+  top: 5px;
+  width: 20px;
+  height: 20px;
+  display:inline-block;
+  background-color: #e2e2e2;
+  border-radius: 25px;
+}
+.carouseljs-dots > span.current:before {
+  background-color: #49B4B6;
+}
+.carouseljs-dots > span:after {
+  content:'';
+  position:absolute;
+  left:7;
+  top:7;
+  width: 12px;
+  height: 12px;
+  display:inline-block;
+  background-color: #e2e2e2;
+  border-radius: 25px;
+}
+.carouseljs-dots > span.current:after {
+    background-color: #49B4B6;
+}
+
