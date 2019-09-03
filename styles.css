@@ -17,7 +17,7 @@ body {
   position: relative;
   padding-left: 60px;
   padding-right: 60px;
-  margin-bottom: 30px;
+  margin-bottom: 50px;
 }
 .carouseljs-container {
   overflow: hidden;
@@ -27,27 +27,25 @@ body {
   align-items: stretch;
   min-width: 0;
 }
-.carouseljs-container > ul { 
-  display: flex; 
-  margin: 0; 
+.carouseljs-track {
+  display: flex;
+  margin: 0;
   padding: 0;
-}
-.carouseljs-container > ul { 
-  background-color: #fbfbfb;
+  background-color: #ffbbbb;
   white-space: nowrap;
 }
-.carouseljs-container > ul > li { 
+.carouseljs-track > .carouseljs-item {
   display: inline-block;
   background-color: #b9b9b9;
   overflow: hidden;
 }
-.carouseljs-container > ul > li * {
+.carouseljs-track > .carouseljs-item * {
   max-width: 100%;
 }
 .carouseljs-container > textarea {
   display: none;
 }
-.button {
+.carouseljs-button {
   width: 50px;
   height: 50px;
   cursor: pointer;
@@ -58,13 +56,13 @@ body {
   top: 50%;
   margin-top: -25px;
 }
-.button.prev {
+.carouseljs-button.prev {
   right: initial;
   left: 0px;
   transform: rotate(180deg);
   margin-top: -22px;
 }
-.button i {
+.carouseljs-button i {
   position: absolute;
   width: 25px;
   height: 3px;
@@ -74,39 +72,39 @@ body {
   left: -4px;
   border-radius: 25px;
 }
-.button.prev i,
-.button.next i {
+.carouseljs-button.prev i,
+.carouseljs-button.next i {
   transform-origin: 100% 50%;
 }
 /* Initial */
-.button.prev .top-line,
-.button.next .top-line {
+.carouseljs-button.prev .top-line,
+.carouseljs-button.next .top-line {
   transform: translate(0px, 1px) rotate(40deg);
 }
-.button.prev .bottom-line,
-.button.next .bottom-line {
+.carouseljs-button.prev .bottom-line,
+.carouseljs-button.next .bottom-line {
   transform: translate(0px, -1px) rotate(-40deg);
 }
 /* Hover */
-.button.prev:hover .top-line,
-.button.next:hover .top-line {
+.carouseljs-button.prev:hover .top-line,
+.carouseljs-button.next:hover .top-line {
   transform: translate(5px, 1px) rotate(40deg);
   width: 30px;
 }
-.button.prev:hover .bottom-line,
-.button.next:hover .bottom-line {
+.carouseljs-button.prev:hover .bottom-line,
+.carouseljs-button.next:hover .bottom-line {
   transform: translate(5px, -1px) rotate(-40deg);
   width: 30px;
 }
 /* Disabled */
-.button[data-state=disabled] {
+.carouseljs-button[data-state=disabled] {
   opacity: 0.3;
   cursor: default;
 }
-.button.prev[data-state=disabled] .top-line,
-.button.prev[data-state=disabled] .bottom-line,
-.button.next[data-state=disabled] .top-line,
-.button.next[data-state=disabled] .bottom-line {
+.carouseljs-button.prev[data-state=disabled] .top-line,
+.carouseljs-button.prev[data-state=disabled] .bottom-line,
+.carouseljs-button.next[data-state=disabled] .top-line,
+.carouseljs-button.next[data-state=disabled] .bottom-line {
   transform: translate(5px, 0) rotate(0deg);
 }
 
@@ -114,7 +112,7 @@ body {
 .carouseljs-dots {
   position:absolute;
   left:0px;
-  bottom: -25px;
+  bottom: -40px;
   width:100%;
   text-align:center;
 }
@@ -136,21 +134,58 @@ body {
   background-color: #e2e2e2;
   border-radius: 25px;
 }
-.carouseljs-dots > span.current:before {
+.carouseljs-dots > span:hover:before {
+  background-color: #c1c1c1;
+}
+.carouseljs-dots > span.carouseljs-current:before {
   background-color: #49B4B6;
 }
-.carouseljs-dots > span:after {
-  content:'';
-  position:absolute;
-  left:7;
-  top:7;
-  width: 12px;
-  height: 12px;
-  display:inline-block;
-  background-color: #e2e2e2;
-  border-radius: 25px;
+
+
+@media (min-width: 0px) {
+  .carouseljs-button {
+    transform: scale(0.7);
+    right: -25px;
+  }
+  .carouseljs-button.prev {
+    left: -25px;
+    transform: scale(0.7) rotate(180deg);
+  }  
+  .carouseljs-wrapper {
+    padding-left: 30px;
+    padding-right: 30px;
+    margin-bottom: 20px;
+  }
 }
-.carouseljs-dots > span.current:after {
-    background-color: #49B4B6;
+@media (min-width: 768px) {
+  .carouseljs-button {
+    transform: scale(0.85);
+    right:-15px;
+  }
+  .carouseljs-button.prev {
+    left: -15px;
+    transform: scale(0.85) rotate(180deg);
+  }  
+  .carouseljs-wrapper {
+    padding-left: 45px;
+    padding-right: 45px;
+    margin-bottom: 35px;
+  }
 }
+@media (min-width: 1200px) {
+  .carouseljs-button {
+    transform: scale(1);
+    right: -5px;
+  }
+  .carouseljs-button.prev {
+    left: -5px;
+    transform: scale(1) rotate(180deg);
+  }  
+  .carouseljs-wrapper {
+    padding-left: 60px;
+    padding-right: 60px;
+    margin-bottom: 50px;
+  }
+}
+
 

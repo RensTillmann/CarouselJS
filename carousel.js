@@ -7,8 +7,8 @@ var CarouselJS = {
 
     // Settings & Options
     settings: {
-        selector: '.carouseljs',        // Selector to intialize the carousel element
         customClass: 'super-carousel',  // A custom class to be added on the container
+        selector: '.carouseljs',        // Selector to intialize the carousel element
         method: 'multi',                // This determines how the slide should be executed
                                         // `single` : slide only one item forward/backward at a time
                                         // `multi` : slide all visible items forward/backward up to "nextItem"
@@ -39,8 +39,8 @@ var CarouselJS = {
         dots: true,                             // Display "Dots" naviagtion below the slider
 
         // Items
-        itemsMargin: '10px 10px 10px 10px',     // Define margin for each item
-        itemsPadding: '10px 10px 10px 10px',    // Define padding for each item
+        itemsMargin: '10px 50px 10px 50px',     // Define margin for each item
+        itemsPadding: '10px 50px 10px 50px',    // Define padding for each item
 
         // Animation
         animationSpeed: 0.3,                    // The scroll animation speed in seconds
@@ -60,8 +60,57 @@ var CarouselJS = {
     // "action" holds the type of action to trigger the slide e.g `next` `prev`
     // ...you could think of it as the "direction" (forward/backward)
     trigger: function(button, action) {
-        this._setters(button, action);
-        this.doSlide();
+        // If triggered via Dot navigation
+        if(action=='dot'){
+            // Look left of dot for "current" dot
+            if(button.classList.contains('current')){
+                // First check if the dot itself is the current, if so do nothing]
+            }else{
+                var prevDot = button,
+                    nextDot = button,
+                    nextButton = null,
+                    i = 0,
+                    direction = '',
+                    clicked = 0;
+                while (prevDot = prevDot.previousElementSibling) {
+                    i++;
+                    if(prevDot.classList.contains('carouseljs-current')){
+                        prevDot.classList.remove('carouseljs-current');
+                        direction = 'right';
+                        break;
+                    }
+                }
+                // If no direction is known at this point it means that we did not found the current on the left side
+                if(direction==''){
+                    i = 0;
+                    while (nextDot = nextDot.nextElementSibling) {
+                        i++;
+                        if(nextDot.classList.contains('carouseljs-current')){
+                            nextDot.classList.remove('carouseljs-current');
+                            direction = 'left';
+                            break;
+                        }
+                    }
+                }
+                if(direction=='right'){
+                    // If we need to slide right
+                    nextButton = button.parentNode.parentNode.querySelector('.next');
+                }else{
+                    // If we need to slide left
+                    nextButton = button.parentNode.parentNode.querySelector('.prev');
+                }
+                // Click the next or prev button X times
+                while (clicked < i){
+                    nextButton.click();
+                    clicked++;
+                }
+                // After sliding update "carouseljs-current" class
+                button.classList.add('carouseljs-current');
+            }
+        }else{
+            this._setters(button, action);
+            this.doSlide();
+        }
     },
 
     // Setters
@@ -69,10 +118,12 @@ var CarouselJS = {
         this._self = node.parentNode;
         this._action = action;
         this._containerWidth = this.itemWidth(this._self);
-        this._currentItem = this._self.querySelector('.current');
+        this._carouselTrack = this._self.querySelector('.carouseljs-track');
+        this._currentItem = this._carouselTrack.querySelector('.carouseljs-current');
         this._currentItemWidth = this.itemWidth(this._currentItem);
-        this._carouselTrack = this._currentItem.parentNode;
         this._totalScrolled = (this._carouselTrack.style.marginLeft !== '' ? parseFloat(this._carouselTrack.style.marginLeft) : 0);
+        this._dotNav = this._self.querySelector('.carouseljs-dots');
+        this._currentDot = this._dotNav.querySelector('.carouseljs-current');
     },
     _self: null,                 // Reference
     _containerWidth: null,       // The total width of the container
@@ -82,6 +133,8 @@ var CarouselJS = {
     _currentItemWidth: null,     // Returns the width of "currentItem"
     _carouselTrack: null,        // Holds the "track" of all items, this is the element that we will be animating
     _totalScrolled: null,        // Current amount the carousel was scrolled
+    _dotNav: null,               // Element that holds dots navigation items
+    _currentDot: null,           // Current dot navigation item
 
     // Slide carousel forward or backward 
     doSlide: function() {
@@ -126,6 +179,7 @@ var CarouselJS = {
             while (nextNode = nextNode.nextElementSibling) {
                 width += this.itemWidth(nextNode);
                 if (width > this._containerWidth) {
+                    
                     // Before scrolling, check if next item + next siblings width does not exceed container width
                     // If this is the case we can simply scroll to the last item of the carousel
                     var nextSibling = nextNode;
@@ -189,7 +243,7 @@ var CarouselJS = {
                     while (nextNode = nextNode.previousElementSibling) {
                         firstNode = nextNode;
                         width += this.itemWidth(nextNode);
-                        if (width > this._containerWidth) {
+                        if (width >= this._containerWidth) {
                             this.updateCurrentItem(nextNode); // Update current item
                             this.slideCarousel(this._containerWidth); // Slide carousel
                             break;
@@ -205,27 +259,47 @@ var CarouselJS = {
     },
     updateCurrentItem: function(next) {
         if(next){
-            this._currentItem.classList.remove('current');
-            next.classList.add('current');
+            this._currentItem.classList.remove('carouseljs-current');
+            next.classList.add('carouseljs-current');
         }
     },
-    slideCarousel: function(amount, carousel=null) {
-        if(!carousel){
+    updateDots: function(){
+        // Update dots
+        if(this._currentDot) {
+            this._currentDot.classList.remove('carouseljs-current');
+            if(this._action=='next'){
+                if(this._currentDot.nextElementSibling){
+                    this._currentDot.nextElementSibling.classList.add('carouseljs-current');
+                }
+            }else{
+                if(this._currentDot.previousElementSibling){
+                    this._currentDot.previousElementSibling.classList.add('carouseljs-current');
+                }
+            }
+        }
+    },
+    slideCarousel: function(amount, node=null) {
+        if(!node){
             if(this._action=='next'){
                 amount = this._totalScrolled - amount; // If sliding forward (next)
             }else{
                 amount = this._totalScrolled + amount; // If sliding backward (previous)
             }
+            this.updateDots();
             // Amount to slide can not be above 0, let's make sure of that
             if(amount>0) amount = 0;
+            // Slide carousel track
             this._carouselTrack.style.marginLeft = amount + 'px';
         }else{
             // Aso reset current to the first item
             // We could also adjust the marginLeft property upon resizing the window
             // but this is just the easy way around, and it's not that important
-            carousel.querySelector('.current').classList.remove('current');
-            carousel.firstElementChild.classList.add('current');
-            carousel.style.marginLeft = amount + 'px'; 
+            node.carousel.querySelector('.carouseljs-current').classList.remove('carouseljs-current');
+            node.carousel.firstElementChild.classList.add('carouseljs-current');
+            node.carousel.style.marginLeft = amount + 'px'; 
+            // If reset to start, update dot navigation
+            if(node.dots.querySelector('.carouseljs-current')) node.dots.querySelector('.carouseljs-current').classList.remove('carouseljs-current');
+            node.dots.firstElementChild.classList.add('carouseljs-current');
         }
     },
     overlapLeft: function() {
@@ -261,17 +335,25 @@ var CarouselJS = {
         var _ = this.settings;
         if(_.itemsMargin!='') node.style.margin = _.itemsMargin;
         if(_.itemsPadding!='') node.style.padding = _.itemsPadding;
-    },
-    setItemWidth: function(item, columns, minwidth, wrapperWidth, newItemWidth){
-        item.style.width = newItemWidth+'px';
+        // First get the window width
+        // Based on this we will adjust the margin/paddings based on screen size
+        var windowWidth = window.innerWidth;
+        if(windowWidth<1000){
+            node.style.marginLeft = ((parseFloat(node.style.marginLeft)/100)*(windowWidth/20));
+            node.style.marginRight = ((parseFloat(node.style.marginRight)/100)*(windowWidth/20));
+            node.style.paddingLeft = ((parseFloat(node.style.paddingLeft)/100)*(windowWidth/20));
+            node.style.paddingRight = ((parseFloat(node.style.paddingRight)/100)*(windowWidth/20));
+        }
+
     },
 
     // Redraw (resize carousel). Will make sure the carousel is responsiveness based on it's parent width
     // Will fire upon initializing, and upon window.resize event
     redraw: function(fn, _, node){
+
         // Merge with core settings
         _ = Object.assign(_, node.settings);
-        this.slideCarousel(0, node.carousel);
+        this.slideCarousel(0, node);
         // Setup item width if `grid` layout is being used
         if(_.layout=='grid'){
             var itemWidth = parseFloat(node.container.clientWidth / _.columns).toFixed(2),
@@ -294,22 +376,54 @@ var CarouselJS = {
             marginRight = parseFloat(style.marginRight) || 0;
             paddingLeft = parseFloat(style.paddingLeft) || 0;
             paddingRight = parseFloat(style.paddingRight) || 0;
+            
             // Set correct width
             var wrapperWidth = parseFloat(node.wrapper.clientWidth).toFixed(2);
             var newItemWidth = parseFloat(itemWidth-(marginLeft+marginRight)-(paddingLeft+paddingRight)).toFixed(2);
             // Check if item width is lower than `minwidth` setting
             while (newItemWidth < _.minwidth){
                 _.columns--;
+                // Columns may never be 0 or lower
+                if(_.columns<=0) _.columns = 1;
                 itemWidth = parseFloat(node.container.clientWidth / _.columns).toFixed(2),
                 newItemWidth = parseFloat(itemWidth-(marginLeft+marginRight)-(paddingLeft+paddingRight)).toFixed(2);
+                if(_.columns==1) break;
             }
-            this.setItemWidth(nodes[i], _.columns, _.minwidth, wrapperWidth, newItemWidth);
+
+            nodes[i].style.width = newItemWidth+'px';
             // Now that we have our margin and padding loop over all other items
             for (var i = 1; i < len; i++) {
                 // Set margin and paddings for the item
                 fn.setMarginPadding(nodes[i]);
                 // Set correct width
-                this.setItemWidth(nodes[i], _.columns, _.minwidth, wrapperWidth, newItemWidth);
+                nodes[i].style.width = newItemWidth+'px';
+            }
+            // Also update dots navigation
+            // Determine how many dots we need to display
+            var newTotal = Math.ceil(node.carousel.children.length/_.columns); 
+            var currentTotal = node.dots.children.length;
+            // Find out the difference between the current amount of dots, and the amount required
+            if(currentTotal < newTotal){
+                // Not enough dots, we must add some
+                var toBeAdded = newTotal-currentTotal;
+                var i = 0;
+                var html = '';
+                while(i < toBeAdded){
+                     var dot = document.createElement('span');
+                     dot.setAttribute("onclick", "CarouselJS.trigger(this, 'dot')");
+                     node.dots.appendChild(dot);
+                     i++;
+                }
+            }
+            if(currentTotal > newTotal){
+                // To many dots, we must remove some
+                var toBeDeleted = currentTotal-newTotal
+                var i = 1;
+                while(toBeDeleted+currentTotal > currentTotal){
+                    node.dots.children[currentTotal-i].remove();
+                    toBeDeleted--;
+                    i++;
+                }
             }
         }
     },
@@ -340,11 +454,16 @@ var CarouselJS = {
                     firstElement.remove();
                 }
                 carousel.classList.remove('carouseljs');
-                carousel.classList.add(_.customClass + '-track');
-                carousel.firstElementChild.classList.add('current');
+                carousel.classList.add('carouseljs-track');
+                carousel.firstElementChild.classList.add('carouseljs-current');
                 // Set transitions
                 carousel.style.WebkitTransition = "all " + parseFloat(_.animationSpeed) + "s"; // Code for Safari 3.1 to 6.0
                 carousel.style.transition = "all " + parseFloat(_.animationSpeed) + "s"; // Standard syntax  
+                // Set item class
+                var items = carousel.children;
+                for (var i = 0; i < items.length; i++) {
+                    items[i].classList.add('carouseljs-item');
+                }
                 // Create wrapper
                 var wrapper = document.createElement('div');
                 wrapper.classList.add('carouseljs-wrapper');
@@ -352,39 +471,39 @@ var CarouselJS = {
                 // Create container
                 var container = document.createElement('div');
                 container.classList.add('carouseljs-container');
-                container.classList.add(_.customClass + '-container');
-                // Add buttons naviagtion if enabled
-                if (_.navigation === true) {
-                    // Add "Previous" button
-                    var prevButton = document.createElement('div');
-                    prevButton.innerHTML = _.buttons.previous.html ? _.buttons.previous.html : '<i class="top-line"></i><i class="bottom-line"></i>';
-                    prevButton.setAttribute("onclick", "CarouselJS.trigger(this, 'prev')");
-                    prevButton.className = 'button prev';
-                    wrapper.appendChild(prevButton);
-                    // Add "Next" button
-                    var nextButton = document.createElement('div');
-                    nextButton.innerHTML = _.buttons.next.html ? _.buttons.next.html : '<i class="top-line"></i><i class="bottom-line"></i>';
-                    nextButton.setAttribute("onclick", "CarouselJS.trigger(this, 'next')");
-                    nextButton.className = 'button next';
-                    wrapper.appendChild(nextButton);
+                // Add "Previous" button
+                var prevButton = document.createElement('div');
+                prevButton.innerHTML = _.buttons.previous.html ? _.buttons.previous.html : '<i class="top-line"></i><i class="bottom-line"></i>';
+                prevButton.setAttribute("onclick", "CarouselJS.trigger(this, 'prev')");
+                prevButton.className = 'carouseljs-button prev';
+                if (_.navigation === false) {
+                    prevButton.style.display = 'none'; 
                 }
+                wrapper.appendChild(prevButton);
+                // Add "Next" button
+                var nextButton = document.createElement('div');
+                nextButton.innerHTML = _.buttons.next.html ? _.buttons.next.html : '<i class="top-line"></i><i class="bottom-line"></i>';
+                nextButton.setAttribute("onclick", "CarouselJS.trigger(this, 'next')");
+                nextButton.className = 'carouseljs-button next';
+                if (_.navigation === false) {
+                    nextButton.style.display = 'none'; 
+                }
+                wrapper.appendChild(nextButton);
                 // Add dots navigation if enabled
                 if (_.dots === true) {
-                    // Determine how many dots we need to display
-                    var total = Math.ceil(carousel.children.length/_.columns, _.columns); 
-                    var html = '<span class="current"></span>'; // First slide is always the current one upon intialization
-                    var i=1;
-                    while(i < total){
-                        html += '<span></span>';
-                        i++;
-                        console.log(i);
-                    }
-                    // Now create the dots navigation and append it to the wrapper
-                    var dots= document.createElement('div');
-                    dots.classList.add('carouseljs-dots');
-                    dots.classList.add(_.customClass + '-dots');
-                    dots.innerHTML = html;
-                    wrapper.appendChild(dots); 
+                     // Determine how many dots we need to display
+                     var total = Math.ceil(carousel.children.length/_.columns), 
+                         html = '<span class="carouseljs-current" onclick="CarouselJS.trigger(this, \'dot\')"></span>', // First slide is always the current one upon intialization
+                         i=1;
+                     while(i < total){
+                         html += '<span onclick="CarouselJS.trigger(this, \'dot\')"></span>';
+                         i++;
+                     }
+                     // Now create the dots navigation and append it to the wrapper
+                     var dots = document.createElement('div');
+                     dots.classList.add('carouseljs-dots');
+                     dots.innerHTML = html;
+                     wrapper.appendChild(dots); 
 
                 }
                 // Insert wrapper before carousel slider in the DOM tree
@@ -396,6 +515,7 @@ var CarouselJS = {
                 // Add container to object
                 containers.push({
                     wrapper: wrapper,
+                    dots: dots,
                     container: container,
                     carousel: carousel,
                     settings: customSettings
