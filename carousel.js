@@ -378,7 +378,6 @@ var CarouselJS = {
             paddingRight = parseFloat(style.paddingRight) || 0;
             
             // Set correct width
-            var wrapperWidth = parseFloat(node.wrapper.clientWidth).toFixed(2);
             var newItemWidth = parseFloat(itemWidth-(marginLeft+marginRight)-(paddingLeft+paddingRight)).toFixed(2);
             // Check if item width is lower than `minwidth` setting
             while (newItemWidth < _.minwidth){
@@ -423,6 +422,25 @@ var CarouselJS = {
                     node.dots.children[currentTotal-i].remove();
                     toBeDeleted--;
                     i++;
+                }
+            }
+            // Determine if we need to hide the dots or not
+            // If so, make sure that we can see the prev/next buttons
+            var dots = node.dots.children;
+            var len = dots.length;
+            var width = 0;
+            for (var i = 1; i < len; i++) {
+                width += this.itemWidth(dots[i]);
+            }
+            if(this.itemWidth(node.container) < width){
+                node.dots.style.visibility = 'hidden';
+                node.wrapper.querySelector('.carouseljs-button.prev').style.display = 'block';
+                node.wrapper.querySelector('.carouseljs-button.next').style.display = 'block';
+            }else{
+                node.dots.style.visibility = '';
+                if(_.navigation==false){
+                    node.wrapper.querySelector('.carouseljs-button.prev').style.display = 'none';
+                    node.wrapper.querySelector('.carouseljs-button.next').style.display = 'none';
                 }
             }
         }
