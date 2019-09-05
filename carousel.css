@@ -1,22 +1,7 @@
-body {
-    width: 100%;
-    margin: 0;
-    padding: 0 10px;
-    box-sizing: border-box;
-}
-
-.slider1 {
-  width:720px;
-  margin:auto;
-}
-.slider2 {
-  width:1530px;
-  margin:auto;
-}
-
-
-.carouseljs-item {
-    padding: 0 40px 0 0;
+.carouseljs {
+  visibility: hidden;
+  overflow:hidden;
+  height:50px;
 }
 .carouseljs-wrapper {
   position: relative;
@@ -36,14 +21,16 @@ body {
   display: flex;
   margin: 0;
   padding: 0;
-  background-color: #ffbbbb;
   white-space: nowrap;
 }
 .carouseljs-track > .carouseljs-item {
   display: inline-block;
-  background-color: #b9b9b9;
   list-style: none;
   overflow: hidden;
+  /* Please do not remove/change the below line.
+   * We set it with !important on purpose because the JS calculates the width based on any paddings.
+   * The script doesn't do any check for box-sizing property */
+  box-sizing: initial!important; 
 }
 .carouseljs-track > .carouseljs-item * {
   max-width: 100%;
@@ -172,7 +159,7 @@ body {
     height: 10px;
   }
   .carouseljs-dots {
-    bottom: -30px;
+    bottom: -40px;
   }
 }
 @media (min-width: 768px) {
@@ -198,7 +185,7 @@ body {
     height: 15px;
   }
   .carouseljs-dots {
-    bottom: -35px;
+    bottom: -45px;
   }  
 }
 @media (min-width: 1200px) {
@@ -224,7 +211,7 @@ body {
     height: 20px;
   }
   .carouseljs-dots {
-    bottom: -40px;
+    bottom: -50px;
   }
 }
 
