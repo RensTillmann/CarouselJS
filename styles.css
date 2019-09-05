@@ -13,6 +13,11 @@ body {
   width:1530px;
   margin:auto;
 }
+
+
+.carouseljs-item {
+    padding: 0 40px 0 0;
+}
 .carouseljs-wrapper {
   position: relative;
   padding-left: 60px;
@@ -37,6 +42,7 @@ body {
 .carouseljs-track > .carouseljs-item {
   display: inline-block;
   background-color: #b9b9b9;
+  list-style: none;
   overflow: hidden;
 }
 .carouseljs-track > .carouseljs-item * {

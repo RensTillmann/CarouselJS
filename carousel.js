@@ -15,7 +15,7 @@ var CarouselJS = {
         layout: 'grid',                 // Choose what layout to use
                                         // `grid` : use flex grid, allowing you to only display a specific amount of items per slide 
                                         // `auto` : puts each item simply behind eachother, not caring about how many are visible
-        columns: 2,                     // The items per slide (only works when `grid` layout is enabled)
+        columns: 3,                     // The items per slide (only works when `grid` layout is enabled)
                                         // This will basically create slides of X items each
                                         // Each item will get a width based on the carousel container width
                                         // For instance: if the carousel is 900px in width, each element would be 300px in width when
@@ -39,8 +39,8 @@ var CarouselJS = {
         dots: true,                             // Display "Dots" naviagtion below the slider
 
         // Items
-        itemsMargin: '10px 50px 10px 50px',     // Define margin for each item
-        itemsPadding: '10px 50px 10px 50px',    // Define padding for each item
+        itemsMargin: '',     // Define margin for each item
+        itemsPadding: '',    // Define padding for each item
 
         // Animation
         animationSpeed: 0.3,                    // The scroll animation speed in seconds
@@ -556,4 +556,4 @@ var CarouselJS = {
     }
 };
 // Initialize CarouselJS
-CarouselJS.init();
+window.onload=CarouselJS.init();
